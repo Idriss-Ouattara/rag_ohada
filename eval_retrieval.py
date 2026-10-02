@@ -28,7 +28,7 @@ Comment ajouter tes propres cas :
 Utilisation :
     python eval_retrieval.py
 """
-
+import sys
 from indexer import (
     charger_corpus,
     construire_index_bm25,
@@ -37,7 +37,9 @@ from indexer import (
 )
 from sentence_transformers import SentenceTransformer
 
+# NOM_MODELE = "paraphrase-multilingual-MiniLM-L12-v2"
 NOM_MODELE = "paraphrase-multilingual-MiniLM-L12-v2"
+ALPHA = float(sys.argv[1]) if len(sys.argv) > 1 else 0.35
 
 
 
@@ -157,7 +159,8 @@ def evaluer():
     for cas in CAS_DE_TEST:
         resultats = rechercher(
             cas["question"], articles, index_bm25, embeddings, morceau_vers_article,
-            modele, top_k=TOP_K, alpha=0.35,  # test : plus de poids au sémantique (défaut 0.5)
+            # modele, top_k=TOP_K, alpha=0.35,  # test : plus de poids au sémantique (défaut 0.5)
+            modele, top_k=TOP_K, alpha=ALPHA,
         )
 
         # On regarde si l'article attendu apparaît quelque part dans le top_k,

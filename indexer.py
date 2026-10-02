@@ -259,7 +259,7 @@ def similarite_cosinus(vecteur: np.ndarray, matrice: np.ndarray) -> np.ndarray:
 #
 # On normalise chaque score sur une échelle 0-1 (les scores BM25 et cosinus
 # ne sont pas sur la même échelle au départ) avant de les additionner.
-# alpha contrôle le poids relatif : alpha=0.5 donne un poids égal aux deux.
+# alpha contrôle le poids relatif : alpha=0.35 donne un poids égal aux deux.
 
 
 def normaliser(scores: np.ndarray) -> np.ndarray:
@@ -277,7 +277,7 @@ def rechercher(
     morceau_vers_article: list[int],
     modele: SentenceTransformer,
     top_k: int = 5,
-    alpha: float = 0.5,
+    alpha: float = 0.35,
 ) -> list[dict]:
     scores_bm25 = np.array(index_bm25.get_scores(tokeniser(question)))
 

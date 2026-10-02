@@ -35,7 +35,7 @@ Question ───────┴──► scores BM25 + scores cosinus ──�
 | Recherche sémantique | `paraphrase-multilingual-MiniLM-L12-v2`, similarité cosinus (NumPy) | Capte le sens sans mot commun |
 | Articles longs | Découpage par phrases en morceaux ≤ limite de tokens du modèle, **meilleur score** retenu par article | Évite la troncature silencieuse des articles longs |
 | Cache | Embeddings en `.npy` + empreinte SHA-256 du corpus | Réindexation automatique si le corpus change |
-| Fusion | Scores min-max normalisés, `alpha·BM25 + (1-alpha)·sémantique` | Simple, réglable, interprétable |
+| Fusion | Scores min-max normalisés, `alpha·BM25 + (1-alpha)·sémantique` (`alpha = 0.35` par défaut) | Simple, réglable, interprétable |
 | Génération | Mistral via Ollama (local, gratuit) | Aucune clé API, aucune donnée envoyée à l'extérieur |
 
 ## Corpus
@@ -48,8 +48,8 @@ Question ───────┴──► scores BM25 + scores cosinus ──�
 ## Installation
 
 ```bash
-git clone https://github.com/Idriss-Ouattara/<nom-du-repo>.git
-cd <nom-du-repo>
+git clone https://github.com/Idriss-Ouattara/rag_ohada.git
+cd rag_ohada
 pip install -r requirements.txt
 ```
 
@@ -58,16 +58,16 @@ Pour la génération : installer [Ollama](https://ollama.com) puis `ollama pull 
 ## Utilisation
 
 ```bash
-python scrape_ohada.py       # télécharge les PDF et construit corpus_ohada.json
-python verifier_corpus.py     # contrôle qualité du corpus
-python indexer.py             # recherche interactive (calcule les embeddings au 1er lancement)
-python generate_local.py     # questions-réponses avec citations
-python eval_retrieval.py      # évaluation de la récupération
+python scrape_ohada.py          # télécharge les PDF et construit corpus_ohada.json
+python verifier_corpus.py       # contrôle qualité du corpus
+python indexer.py               # recherche interactive (calcule les embeddings au 1er lancement)
+python generate_local.py        # questions-réponses avec citations
+python eval_retrieval.py 0.35   # évaluation de la récupération (argument : alpha, entre 0 et 1)
 ```
 
 ## Comprendre les scores
 
-Quand on lance `indexer.py`, chaque résultat affiche trois valeurs :
+Quand on lance `indexer.py`, chaque résultat affiche trois valeurs (exemple illustratif) :
 
 ```
 [Article 311] score=0.83 (lexical=6.0, sémantique=0.62)
@@ -103,15 +103,18 @@ Un score de 0,83 ne veut pas dire « 83 % de confiance », mais « le meilleur p
 
 | Configuration | Hit@5 (/16) |
 |---|---|
-| BM25 seul (`alpha=1`) | `…` |
-| Sémantique seul (`alpha=0`) | `…` |
-| Hybride (`alpha=0.35`) | `…` |
+| BM25 seul (`alpha=1`) | 13/16 (81 %) |
+| Sémantique seul (`alpha=0`) | 11/16 (69 %) |
+| Hybride (`alpha=0.35`) | 15/16 (94 %) |
 
-Le script distingue aussi deux types d'échecs : un article présent dans le corpus mais non retrouvé (problème de récupération) et un article absent du corpus (trou de couverture).
+La recherche hybride retrouve l'article attendu dans le top 5 pour 15 questions sur 16, contre 13 pour BM25 seul et 11 pour le sémantique seul.
+
+En cas d'échec, le script affiche les articles retournés à la place de l'article attendu, ce qui permet de distinguer un défaut de récupération d'un article absent du corpus.
 
 ## Limites et pistes
 
 - Évaluation limitée à l'AUSCGIE (16 questions) ; l'AUDCG n'est pas encore couvert par les cas de test
+- `alpha = 0.35` a été choisi en observant ces mêmes 16 questions : le score hybride est donc légèrement optimiste, et avec 16 questions un écart de 1 ou 2 points reste fragile
 - Pas encore de reranker ni d'évaluation automatique de la fidélité des réponses générées
 - Autres Actes uniformes à ajouter (sûretés, recouvrement, procédures collectives, arbitrage, comptabilité)
 - Pistes : modèle d'embeddings plus puissant, fusion par rangs (RRF), reranking
