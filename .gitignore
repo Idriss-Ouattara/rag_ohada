@@ -1,0 +1,15 @@
+# PDF téléchargés (régénérés par le scraper)
+pdfs/
+
+# Caches d'embeddings (recalculés au premier lancement)
+embeddings_ohada.npy
+embeddings_ohada_meta.json
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+diagnostic_titre.py
+diagnostic_titre2.py
+scrape_ohada3.py
