@@ -1,5 +1,5 @@
 """
-Scraper OHADA — script unique, à lancer tel quel.
+Scraper OHADA — script unique
 
 Ce que fait ce script, dans l'ordre :
   1. Télécharge les PDF des Actes uniformes listés dans SOURCES (ci-dessous).
@@ -9,12 +9,6 @@ Ce que fait ce script, dans l'ordre :
 
 Utilisation :
     pip install requests pdfplumber
-    python scrape_ohada.py
-
-Tout se passe dans CE dossier — pas de sous-dossiers à créer. Deux
-dossiers seront créés automatiquement au premier lancement :
-  - pdfs/       : les PDF téléchargés (pour ne pas les retélécharger à chaque fois)
-  - corpus_ohada.json : le résultat final, un article par entrée
 """
 
 import json
@@ -52,8 +46,6 @@ FICHIER_SORTIE = Path(__file__).parent / "corpus_ohada.json"
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (compatible; NexaLing-OHADA-RAG/0.1; recherche academique)"
 }
-
-
 
 # 2. TÉLÉCHARGEMENT
 
@@ -212,13 +204,7 @@ def main():
     tous_les_articles = []
     reussies, echouees = [], []
 
-    # Chaque source est traitée indépendamment : avant ce correctif, une
-    # exception sur UNE SEULE source (ex. lien mort, PDF illisible) faisait
-    # planter tout le script AVANT l'écriture de corpus_ohada.json — donc
-    # même les sources déjà traitées avec succès étaient perdues, et
-    # l'ancien fichier restait inchangé sans qu'on sache pourquoi. C'est ce
-    # qui explique qu'un Acte ajouté à SOURCES puisse rester absent du
-    # corpus sans aucun message d'erreur visible.
+    
     for source in SOURCES:
         try:
             chemin_pdf = telecharger_pdf(source)
