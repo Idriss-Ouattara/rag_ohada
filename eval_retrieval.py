@@ -16,15 +16,6 @@ différentes :
     simplement PAS dans le corpus (pas un bug, juste un trou à combler
     plus tard en scrapant d'autres actes uniformes)
 
-Comment ajouter tes propres cas :
-  1. Ouvre corpus_ohada.json, choisis un article que tu comprends bien.
-  2. Note son "acte_id" et son "article_numero".
-  3. Formule une question à laquelle CET article répond — dans tes mots,
-     pas en recopiant le texte de l'article (sinon tu testes juste si
-     BM25 retrouve les mêmes mots, pas si le système comprend la question).
-  4. Ajoute une entrée dans CAS_DE_TEST ci-dessous, même format que les
-     exemples déjà présents.
-
 Utilisation :
     python eval_retrieval.py
 """
@@ -40,13 +31,6 @@ from sentence_transformers import SentenceTransformer
 # NOM_MODELE = "paraphrase-multilingual-MiniLM-L12-v2"
 NOM_MODELE = "paraphrase-multilingual-MiniLM-L12-v2"
 ALPHA = float(sys.argv[1]) if len(sys.argv) > 1 else 0.35
-
-
-
-# CAS DE TEST — complète cette liste avec tes propres exemples (voir
-# instructions dans le docstring ci-dessus). Les 3 premiers sont déjà
-# vérifiés sur le vrai texte de l'AUSCGIE (Acte uniforme sociétés
-# commerciales) et servent d'exemple de format.
 
 CAS_DE_TEST = [
     {
@@ -129,17 +113,6 @@ CAS_DE_TEST = [
         "acte_id_attendu": "audscgie",
         "article_attendu": "920",
     },
-    # Ajoute tes propres cas ici, même format — idéalement en couvrant les
-    # autres Actes uniformes une fois qu'ils seront dans le corpus (voir
-    # scrape_ohada2.py), pour ne pas évaluer uniquement sur l'AUSCGIE.
-    #
-    # Note sur les "cas négatifs" (question hors corpus) : ce fichier teste
-    # le RETRIEVAL, qui renverra toujours ses top_k meilleurs résultats
-    # même quand aucun n'est vraiment pertinent — il n'y a donc pas de
-    # notion de "bonne réponse : aucune" à vérifier ici. Le bon endroit
-    # pour tester qu'une question hors corpus produit bien un refus
-    # explicite ("les articles fournis ne permettent pas de répondre") est
-    # au niveau de la génération, dans generate_local2.py.
 ]
 
 TOP_K = 5  # on vérifie si l'article attendu est dans les 5 premiers résultats
