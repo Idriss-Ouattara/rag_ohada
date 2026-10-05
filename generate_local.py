@@ -1,15 +1,6 @@
 """
 Génération de réponses avec citation — version Ollama (LLM local, gratuit).
 
-Même principe que generate.py, mais on parle à Ollama (qui tourne en local
-sur ta machine, http://localhost:11434) au lieu de l'API Anthropic. Pas de
-clé API, pas de coût, mais il faut qu'Ollama tourne et que le modèle soit
-déjà téléchargé (voir instructions données à côté de ce fichier).
-
-Pourquoi les mêmes règles strictes que generate.py : le risque
-d'hallucination (le LLM qui invente une réponse plausible) existe pour
-n'importe quel modèle, local ou via API — le prompt verrouille ce
-comportement de la même façon dans les deux cas.
 
 Utilisation :
     1. Installer Ollama (ollama.com) et lancer : ollama pull mistral
