@@ -1,10 +1,7 @@
 """
-Vérification qualité de corpus_ohada.json — à lancer après scrape_ohada.py.
+Vérification qualité de corpus_ohada.json 
 
-Ce script ne modifie rien : il inspecte le corpus et affiche des signaux
-d'alerte. L'idée est de repérer les problèmes AVANT l'indexation, parce
-qu'un mauvais découpage propagé dans l'indexation coûte plus cher à
-corriger après coup (il faut ré-indexer).
+
 
 Ce qu'on vérifie, et pourquoi :
 
@@ -61,14 +58,14 @@ def verifier(articles: list[dict]) -> None:
         print(f"  {acte_id} : {nb} articles")
     print()
 
-    # --- 2. Articles trop courts ---
+    # 2. Articles trop courts 
     trop_courts = [a for a in articles if len(a["texte"]) < 20]
     print(f"Articles suspicieusement courts (< 20 caractères) : {len(trop_courts)}")
     for a in trop_courts[:5]:  # on n'affiche que les 5 premiers pour ne pas noyer
         print(f"  [{a['acte_id']}] Article {a['article_numero']} : {a['texte']!r}")
     print()
 
-    # --- 3. Bruit résiduel ---
+    #  3. Bruit résiduel 
     avec_bruit = []
     for a in articles:
         if any(motif.search(a["texte"]) for motif in MOTIFS_BRUIT):
