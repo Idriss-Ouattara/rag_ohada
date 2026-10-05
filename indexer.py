@@ -57,11 +57,10 @@ def charger_corpus() -> list[dict]:
     return json.loads(FICHIER_CORPUS.read_text(encoding="utf-8"))
 
 
-# 2. INDEX LEXICAL (BM25)
-#
-# BM25 a besoin du texte découpé en mots ("tokenisé"), pas du texte brut.
-# On fait une tokenisation simple : minuscules + découpage sur tout ce qui
-# n'est pas une lettre. Pas besoin d'une librairie NLP complète pour ça.
+"""2. INDEX LEXICAL (BM25)
+BM25 a besoin du texte découpé en mots ("tokenisé"), pas du texte brut.
+On fait une tokenisation simple : minuscules + découpage sur tout ce qui
+n'est pas une lettre. Pas besoin d'une librairie NLP complète pour ça."""
 
 
 def tokeniser(texte: str) -> list[str]:
@@ -127,53 +126,12 @@ def calculer_hash_corpus(articles: list[dict]) -> str:
 
 
 
-# 2 ter. TEXTE ENRICHI POUR L'INDEXATION
-#
-# Problème réel observé sur eval_retrieval.py : l'article 311 dit juste
-# "le capital social doit être d'un million de francs CFA" — le mot "SARL"
-# n'y figure jamais, il vit uniquement dans son titre_section ("Titre 1 -
-# Constitution de la société à responsabilité limitée"). Un article de loi
-# est écrit pour être lu DANS son contexte (juste après le titre qui
-# l'annonce), pas de façon autonome — mais BM25 et les embeddings n'ont
-# accès qu'à ce qu'on leur donne.
-#
-# On construit donc un texte "enrichi" — livre + titre + chapitre + texte
-# — utilisé UNIQUEMENT pour l'indexation (BM25 et embeddings). livre_section
-# est important : pour les articles de la société anonyme, c'est LUI qui
-# porte le mot "anonyme" (ex. "Livre 4 - Société anonyme"), pas titre_section
-# qui reste souvent un intitulé générique ("Titre 1 - Dispositions
-# générales") partagé par plusieurs Livres. Le champ "texte" d'origine
-# reste inchangé pour l'affichage et pour le contexte envoyé au LLM.
-
-
 def texte_pour_recherche(article: dict) -> str:
     morceaux_contexte = [
         article.get("livre_section"), article.get("titre_section"), article.get("chapitre_section"),
     ]
     prefixe = " - ".join(m for m in morceaux_contexte if m)
     return f"{prefixe}. {article['texte']}" if prefixe else article["texte"]
-
-
-
-# 3. INDEX SÉMANTIQUE (embeddings)
-#
-# On calcule un vecteur par MORCEAU de texte UNE SEULE FOIS et on le
-# sauvegarde sur disque (fichier .npy). Recalculer les embeddings à chaque
-# recherche serait beaucoup trop lent — c'est le même principe que le
-# cache des PDF dans scrape_ohada.py : on paie le coût une fois, pas à
-# chaque usage.
-#
-# Pourquoi "morceau" et pas directement "article" : NOM_MODELE tronque
-# silencieusement tout texte au-delà de modele.max_seq_length tokens (128
-# pour ce modèle). La plupart des articles sont courts et passent
-# largement en dessous, mais certains (ex. article 626-1, plus de 7000
-# caractères) seraient tronqués aux trois quarts si on les embeddait tels
-# quels — sans erreur ni avertissement, juste une perte de sens silencieuse.
-# On découpe donc les articles trop longs en plusieurs morceaux qui tiennent
-# chacun dans la limite, et on retiendra plus tard (fonction rechercher) le
-# MEILLEUR score parmi les morceaux d'un même article : un seul passage
-# pertinent dans un article long suffit à le rendre pertinent, la moyenne
-# le diluerait.
 
 
 def decouper_pour_embedding(texte: str, modele: SentenceTransformer, marge_tokens: int = 10) -> list[str]:
