@@ -103,8 +103,6 @@ def construire_index_bm25(articles: list[dict]) -> BM25Okapi:
     corpus_tokenise = [tokeniser(texte_pour_recherche(a)) for a in articles]
     return BM25Okapi(corpus_tokenise)
 
-
-
 # 2 bis. EMPREINTE DU CORPUS
 #
 # Sert à savoir si des embeddings déjà calculés sur le disque correspondent
@@ -115,7 +113,6 @@ def construire_index_bm25(articles: list[dict]) -> BM25Okapi:
 # articles - une désynchronisation silencieuse, donc particulièrement
 # dangereuse.
 
-
 def calculer_hash_corpus(articles: list[dict]) -> str:
     contenu = "||".join(
         f"{a['acte_id']}#{a['article_numero']}#{a.get('livre_section') or ''}#"
@@ -123,7 +120,6 @@ def calculer_hash_corpus(articles: list[dict]) -> str:
         for a in articles
     )
     return hashlib.sha256(contenu.encode("utf-8")).hexdigest()
-
 
 
 def texte_pour_recherche(article: dict) -> str:
@@ -137,30 +133,41 @@ def texte_pour_recherche(article: dict) -> str:
 def decouper_pour_embedding(texte: str, modele: SentenceTransformer, marge_tokens: int = 10) -> list[str]:
     """Découpe un texte en morceaux qui tiennent dans la limite de tokens du modèle.
 
-    On découpe phrase par phrase (jamais au milieu d'une phrase, pour ne
-    pas casser le sens) en regroupant les phrases tant que ça tient sous
-    la limite. marge_tokens laisse de la place aux tokens spéciaux que le
-    tokenizer ajoute lui-même ([CLS]/[SEP]).
+    On découpe phrase par phrase (jamais au milieu d'une phrase) en regroupant
+    les phrases tant que ça tient sous la limite. marge_tokens laisse de la
+    place aux tokens spéciaux ([CLS]/[SEP]).
     """
     limite = modele.max_seq_length - marge_tokens
     phrases = re.split(r"(?<=[.;:])\s+", texte.strip())
 
     morceaux = []
     morceau_courant = ""
+
     for phrase in phrases:
-        candidat = f"{morceau_courant} {phrase}".strip() if morceau_courant else phrase
+        # Premier morceau : on le démarre avec la phrase, sans rien tester
+        if morceau_courant == "":
+            morceau_courant = phrase
+            continue
+
+        # Sinon, on essaie d'ajouter la phrase au morceau en cours
+        candidat = morceau_courant + " " + phrase
         nb_tokens = len(modele.tokenizer.encode(candidat, add_special_tokens=False))
-        if nb_tokens <= limite or not morceau_courant:
+
+        if nb_tokens <= limite:
             morceau_courant = candidat
         else:
             morceaux.append(morceau_courant)
             morceau_courant = phrase
 
-    if morceau_courant:
+    # Ne pas oublier le dernier morceau
+    if morceau_courant != "":
         morceaux.append(morceau_courant)
-    return morceaux or [texte]  # filet de sécurité (texte vide, cas limite)
 
+    # Filet de sécurité (texte vide, cas limite)
+    if len(morceaux) == 0:
+        morceaux.append(texte)
 
+    return morceaux
 def construire_ou_charger_embeddings(
     articles: list[dict], modele: SentenceTransformer
 ) -> tuple[np.ndarray, list[int]]:
@@ -210,7 +217,6 @@ def similarite_cosinus(vecteur: np.ndarray, matrice: np.ndarray) -> np.ndarray:
     vecteur_norme = vecteur / np.linalg.norm(vecteur)
     matrice_normee = matrice / np.linalg.norm(matrice, axis=1, keepdims=True)
     return matrice_normee @ vecteur_norme
-
 
 
 # 4. RECHERCHE HYBRIDE
